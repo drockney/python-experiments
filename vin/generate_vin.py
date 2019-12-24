@@ -1,14 +1,20 @@
 """Generate a random VIN. Validation logic taken from:
 https://vin.dataonesoftware.com/vin_basics_blog/bid/112040/use-vin-validation-to-improve-inventory-quality
 """
+# TODO:
+# 1) Refactor checksum as a function
+# 2) Correctly pass VIN as a string instead of as an array
+# 3) Allow for multiple different value arrays for checksum
+#    calculations - e.g. instead of check_digit = 9 and an array
+#    with fixed values, allow the user to pass a specific 
+#    array definition
+# 4) Consistently name variables - camelCase or name_underscores,
+#    pick one for god's sake!
+# 5) Set functions up to be externalizable so that they can be
+#    added to, say, a VIN validator or VIN exploder
 import sys
 import random
 
-# Initialize the VIN array
-vin = []
-
-# String containing the output VIN
-vin_output = ""
 
 # A VIN is allowed to have letters or numbers, except
 # for i, o, or q. Build a map that will correlate with
@@ -24,11 +30,15 @@ valid_values = [["0",0], ["1",1], ["2",2], ["3",3], ["4",4],
 check_digit = 9
 checksum = 0
 
-# A VIN is 17 alphanumeric values. In the US and
-# Canada, the 9th character is a special checksum.
-# Generate 16 alphanumeric values
-for digit in range(0, 16):
-    vin.append(random.randrange(0,len(valid_values),1))
+def randomizeArray():
+    # A VIN is 17 alphanumeric values. In the US and
+    # Canada, the 9th character is a special checksum.
+    # Generate 16 alphanumeric values (17, but we will
+    # throw the 9th away)
+    vin = []
+    for digit in range(0, 16):
+        vin.append(random.randrange(0,len(valid_values),1))
+    return(vin)
 
 # Generate checksum value, which is the sum of all digits
 # except the check digit, then modulo 11
@@ -37,13 +47,23 @@ for digit in range(0, len(vin)):
         checksum += valid_values[vin[digit]][1]
 checksum = checksum % 11
 
-# Generate complete string
-for digit in range(0, len(vin)):
-    if (digit != (check_digit - 1)):
+def main:
+    # Initialize the VIN array
+    vin = randomizeArray()
+
+    # String containing the output VIN
+    vin_output = ""
+
+    # Generate complete string
+    for digit in range(0, len(vin)):
+      if (digit != (check_digit - 1)):
         vin_output+=valid_values[vin[digit]][0]
-    else:
+      else:
         if(checksum < 10):
-            vin_output+=str(checksum)
+          vin_output+=str(checksum)
         else:
-            vin_output+="X"
-print(vin_output)
+          vin_output+="X"
+    print(vin_output)
+
+if __name__ == '__main__':
+    main()
