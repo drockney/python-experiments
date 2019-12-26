@@ -2,68 +2,88 @@
 https://vin.dataonesoftware.com/vin_basics_blog/bid/112040/use-vin-validation-to-improve-inventory-quality
 """
 # TODO:
-# 1) Refactor checksum as a function
-# 2) Correctly pass VIN as a string instead of as an array
-# 3) Allow for multiple different value arrays for checksum
-#    calculations - e.g. instead of check_digit = 9 and an array
-#    with fixed values, allow the user to pass a specific 
-#    array definition
-# 4) Consistently name variables - camelCase or name_underscores,
-#    pick one for god's sake!
-# 5) Set functions up to be externalizable so that they can be
-#    added to, say, a VIN validator or VIN exploder
+# * Set functions up to be externalizable so that they can be
+#     added to, say, a VIN validator or VIN exploder
+# * Make main() do something with parameters
 import sys
 import random
-
+import csv
 
 # A VIN is allowed to have letters or numbers, except
 # for i, o, or q. Build a map that will correlate with
 # these values in the array. First position is the character
 # for the string, second is the check-digit value
-valid_values = [["0",0], ["1",1], ["2",2], ["3",3], ["4",4],
-                ["5",5], ["6",6], ["7",7], ["8",8], ["9",9],
-                ["A",1], ["B",2], ["C",3], ["D",4], ["E",5],
-                ["F",6], ["G",7], ["H",8], ["J",1], ["K",2],
-                ["L",3], ["M",4], ["N",5], ["P",7], ["R",9],
-                ["S",2], ["T",3], ["U",4], ["V",5], ["W",6],
-                ["X",7], ["Y",8], ["Z",9]]
-check_digit = 9
-checksum = 0
+def loadCsvList(fileName = '', delimiter = ','):
+    with open(fileName) as csvfile:
+        reader = csv.reader(csvfile, delimiter=delimiter)
+        linenum=0
+        listName = []
+        next(reader)
+        for row in reader:
+            listName.append(row)
+    return(listName)
 
-def randomizeArray():
+def generateChecksum(vin, checkDigit = 9):
+    checksum = 0
+    # Generate checksum value, which is the sum of all digits
+    # except the check digit according to the validVinValues
+    # table, then take modulo 11
+    validVinValues = loadCsvList('validVINvalues.csv')
+    weightTable = loadCsvList('weightTable.csv')
+    for digit in range(0, len(vin)):
+        if (digit != (checkDigit - 1)):
+            # Find the index for that particular digit in the validVinValues
+            # table, then use it to pull its check value
+            x = [x for x in validVinValues if vin[digit] in x][0]
+            checksum += (int(x[1])*int(weightTable[digit][0]))
+    if((checksum % 11) < 10):
+        vin[checkDigit - 1] = str(checksum % 11)
+    else:
+        vin[checkDigit - 1] = 'X'
+    return(vin)
+
+def randomizeArray(country = '', year = 0, make = ''):
     # A VIN is 17 alphanumeric values. In the US and
     # Canada, the 9th character is a special checksum.
     # Generate 16 alphanumeric values (17, but we will
     # throw the 9th away)
+    validVinValues = loadCsvList('validVINvalues.csv')
+    makeValues = loadCsvList('makes.csv', '|')
+    yearValues = loadCsvList('YearChart.csv')
     vin = []
+    # Let's make a random VIN
     for digit in range(0, 16):
-        vin.append(random.randrange(0,len(valid_values),1))
+        vin.append(validVinValues[random.randrange(0,len(validVinValues),1)][0])
+
+    # Let's pick a random make, unless the user has specified one
+    if (len(make) > 0):
+        make = [x for x in makeValues if make in x][0][0]
+    else:
+        make = makeValues[random.randrange(0,len(makeValues),1)][0]
+    for digit in range(0, (len(make))):
+        vin[digit] = make[digit]
+    # pick a random year, unless the user specified one
+    if (year > 0):
+        vin[9] = [x for x in yearValues if year in x][0][1]
+    else:
+        vin[9] = yearValues[random.randrange(0,len(yearValues),1)][1]
+    # Create the checksum value
+    vin = generateChecksum(vin)
     return(vin)
 
-# Generate checksum value, which is the sum of all digits
-# except the check digit, then modulo 11
-for digit in range(0, len(vin)):
-    if (digit != (check_digit - 1)):
-        checksum += valid_values[vin[digit]][1]
-checksum = checksum % 11
+def validateVin(vin = [], country = '', year = 0, make = ''):
+    print(vin)
 
-def main:
-    # Initialize the VIN array
-    vin = randomizeArray()
-
-    # String containing the output VIN
-    vin_output = ""
-
-    # Generate complete string
-    for digit in range(0, len(vin)):
-      if (digit != (check_digit - 1)):
-        vin_output+=valid_values[vin[digit]][0]
-      else:
-        if(checksum < 10):
-          vin_output+=str(checksum)
-        else:
-          vin_output+="X"
-    print(vin_output)
+def main(country = '', year = 0, make = '', vin = []):
+    # Did we receive a VIN? If so, we'll check it for
+    # consistency. We'll also print make and year.
+    if (len(vin) > 0):
+        validateVin(vin, country, year, make)
+    else:
+        # Some random value, unless country, 
+        # make, and/or year is listed.
+        vin = randomizeArray(country, year, make)
+        print("".join(vin))
 
 if __name__ == '__main__':
     main()
