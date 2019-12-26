@@ -27,7 +27,8 @@ def generateChecksum(vin, checkDigit = 9):
     checksum = 0
     # Generate checksum value, which is the sum of all digits
     # except the check digit according to the validVinValues
-    # table, then take modulo 11
+    # table multiplied by the weightTable values for each position
+    # in the VIN, then take modulo 11 of the whole mess
     validVinValues = loadCsvList('validVINvalues.csv')
     weightTable = loadCsvList('weightTable.csv')
     for digit in range(0, len(vin)):
@@ -36,6 +37,7 @@ def generateChecksum(vin, checkDigit = 9):
             # table, then use it to pull its check value
             x = [x for x in validVinValues if vin[digit] in x][0]
             checksum += (int(x[1])*int(weightTable[digit][0]))
+    # If the number is 0-9, leave it, otherwise replace it with an 'X'
     if((checksum % 11) < 10):
         vin[checkDigit - 1] = str(checksum % 11)
     else:
