@@ -73,12 +73,16 @@ def randomizeArray(country = '', year = 0, make = ''):
     vin = generateChecksum(vin)
     return(vin)
 
-def validateVin(vin = [], country = '', year = 0, make = ''):
-    print(vin)
+def validateVin(vin, country = '', year = 0, make = ''):
+    checkedVin = generateChecksum(list(vin))
+    if ("".join(vin) == "".join(checkedVin)):
+        print("".join(vin),"has a valid checksum")
+    else:
+        print("".join(vin),"has an *invalid* checksum")
 
 def main(country = '', year = 0, make = '', vin = []):
     # Did we receive a VIN? If so, we'll check it for
-    # consistency. We'll also print make and year.
+    # consistency. We'll also print make, country, and year.
     if (len(vin) > 0):
         validateVin(vin, country, year, make)
     else:
