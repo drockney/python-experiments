@@ -54,7 +54,7 @@ def randomizeArray(country = '', year = 0, make = ''):
     yearValues = loadCsvList('YearChart.csv')
     vin = []
     # Let's make a random VIN
-    for digit in range(0, 16):
+    for digit in range(0, 17):
         vin.append(validVinValues[random.randrange(0,len(validVinValues),1)][0])
 
     # Let's pick a random make, unless the user has specified one
